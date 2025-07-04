@@ -1,0 +1,32 @@
+volumes:
+  db_volume:
+  static:
+  media:
+
+services:
+  db:
+    image: postgres:14
+    env_file: ./backend/.env
+    volumes:
+      - db_volume:/var/lib/postgresql/data/
+  backend:
+    build: ./backend/
+    env_file: ./backend/.env
+    volumes:
+      - static:/static/
+      - media:/app/media/
+    depends_on:
+      - db
+  frontend:
+    build: ./frontend/
+    volumes:
+      - static:/app/result_build/
+  nginx:
+    build: ./nginx/
+    ports:
+      - 8000:80
+    volumes:
+      - static:/usr/share/nginx/html/
+      - media:/usr/share/nginx/media/
+    depends_on:
+      - backend
