@@ -136,7 +136,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         ingredients = validated_data.pop('ingredients', None)
         instance.name = validated_data.get('name')
-        instance.image = validated_data.get('image')
+        instance.image = validated_data.get('image', instance.image)
         instance.text = validated_data.get('text')
         instance.cooking_time = validated_data.get('cooking_time')
         Recipe.objects.filter(pk=instance.pk).update(**validated_data)
