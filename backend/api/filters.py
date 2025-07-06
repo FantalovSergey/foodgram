@@ -35,5 +35,5 @@ class RecipeFilter(FilterSet):
             else queryset.exclude(pk__in=recipes)
         )
 
-    def tags_filter(self, queryset, name, _):
-        return queryset.filter(tags__slug__in=self.data.getlist(name))
+    def tags_filter(self, queryset, _, value):
+        return queryset.filter(tags__slug=value)
