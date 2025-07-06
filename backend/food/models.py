@@ -39,20 +39,11 @@ class Tag(models.Model):
     )
     slug = models.SlugField(
         max_length=constants.TAG_FIELDS_MAX_LENGTH,
-        blank=True,
+        unique=True,
         verbose_name='Слаг',
     )
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['slug'],
-                name='slug_is_unique_or_empty',
-                condition=~models.Q(slug=''),
-                violation_error_message=(
-                    'Поле slug должно быть уникальным или пустым.'),
-            )
-        ]
         ordering = ('name',)
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
