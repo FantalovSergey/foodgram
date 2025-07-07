@@ -49,7 +49,7 @@ def get_pdf_in_response(data: Dict[Any, Iterable]) -> FileResponse:
     )
     page, lines = start_page(file)
     for key, value in data.items():
-        line = f'- {key}: {' '.join(map(str, value))}'
+        line = f'- {key}: {" ".join(map(str, value))}'
         for row_start in range(0, len(line), constants.MAX_COLUMN_COUNT):
             lines.append(
                 line[row_start:row_start + constants.MAX_COLUMN_COUNT]
