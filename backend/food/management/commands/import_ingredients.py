@@ -8,7 +8,7 @@ from food.models import Ingredient
 
 
 class Command(BaseCommand):
-    help = 'Импорт ингредиентов в базу данных PostgreSQL.'
+    help = 'Импорт ингредиентов в базу данных.'
 
     def handle(self, *args, **options):
         self.load_ingredients(
