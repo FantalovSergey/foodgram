@@ -8,5 +8,5 @@ class RecipeRedirectView(RedirectView):
         try:
             recipe = Recipe.objects.get(short_link=kwargs['short_link'])
         except Recipe.DoesNotExist:
-            return 'not-found/'
-        return f'recipes/{recipe.pk}/'
+            return '/not-found/'
+        return f'/recipes/{recipe.pk}/'
