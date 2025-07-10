@@ -28,11 +28,6 @@ class User(AbstractUser):
     avatar = models.ImageField(
         upload_to='avatars', null=True, blank=True, verbose_name='Аватар',
     )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name='Действующий',
-        help_text='Уберите галочку, чтобы заблокировать пользователя.',
-    )
 
     class Meta:
         ordering = ('username',)
@@ -71,7 +66,7 @@ class Subscription(models.Model):
                     'Поля "author" и "follower" должны различаться.'),
             ),
         ]
-        ordering = ('-id',)
+        ordering = ('follower__username', 'author__username')
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
 

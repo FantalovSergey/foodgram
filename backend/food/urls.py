@@ -1,10 +1,10 @@
-from django.urls import re_path
+from django.urls import path
 
 from .views import RecipeRedirectView
 
 urlpatterns = [
-    re_path(
-        r'^SL[a-zA-Z0-9]+/$',
+    path(
+        'SL/<slug:short_link>/',
         RecipeRedirectView.as_view(),
         name='recipe_redirect',
     )

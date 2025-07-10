@@ -66,13 +66,17 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': os.getenv('POSTGRES_DB', 'django'),
+    #     'USER': os.getenv('POSTGRES_USER', 'django'),
+    #     'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+    #     'HOST': os.getenv('DB_HOST', ''),
+    #     'PORT': os.getenv('DB_PORT', 5432)
+    # }
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'django'),
-        'USER': os.getenv('POSTGRES_USER', 'django'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', 5432)
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -94,8 +98,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 DJOSER = {
     'SERIALIZERS': {
-        'user': 'api.serializers.CustomUserSerializer',
-        'current_user': 'api.serializers.CustomUserSerializer',
+        'user': 'api.serializers.FoodgramUserSerializer',
+        'current_user': 'api.serializers.FoodgramUserSerializer',
     },
 
     'PERMISSIONS': {
@@ -110,7 +114,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ),
 
-    'DEFAULT_PAGINATION_CLASS': 'api.pagination.CustomPagination',
+    'DEFAULT_PAGINATION_CLASS': 'api.pagination.PageNumberLimitPagination',
     'PAGE_SIZE': 6,
 
     'DEFAULT_PERMISSION_CLASSES': [
@@ -119,7 +123,7 @@ REST_FRAMEWORK = {
 }
 
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'UTC'
 

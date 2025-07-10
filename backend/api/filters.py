@@ -12,27 +12,30 @@ class IngredientFilter(FilterSet):
 
 
 class RecipeFilter(FilterSet):
-    is_favorited = BooleanFilter(method='boolean_recipe_filter')
-    is_in_shopping_cart = BooleanFilter(method='boolean_recipe_filter')
+    is_favorited = BooleanFilter(method='is_favorited_filter')
+    is_in_shopping_cart = BooleanFilter(method='is_in_shopping_cart_filter')
     tags = CharFilter(method='tags_filter')
 
     class Meta:
         fields = ('author', 'is_favorited', 'is_in_shopping_cart', 'tags')
         model = Recipe
 
-    def boolean_recipe_filter(self, queryset, name, value):
+    def is_favorited_filter(self, queryset, _, value):
         user = self.request.user
-        if user.is_authenticated:
-            manager = (
-                user.favorites if name == 'is_favorited'
-                else user.shopping_cart
-            )
-            recipes = manager.values_list('recipe', flat=True)
-        else:
-            recipes = []
+        if user.is_anonymous or not isinstance(value, bool):
+            return queryset
         return (
-            queryset.filter(pk__in=recipes) if value
-            else queryset.exclude(pk__in=recipes)
+            queryset.filter(in_favorites__user=user) if value
+            else queryset.exclude(in_favorites__user=user)
+        )
+
+    def is_in_shopping_cart_filter(self, queryset, _, value):
+        user = self.request.user
+        if user.is_anonymous or not isinstance(value, bool):
+            return queryset
+        return (
+            queryset.filter(in_shoppingcart__user=user) if value
+            else queryset.exclude(in_shoppingcart__user=user)
         )
 
     def tags_filter(self, queryset, name, _):

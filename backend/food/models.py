@@ -1,7 +1,7 @@
 from random import choice
 
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from . import constants
@@ -20,6 +20,13 @@ class Ingredient(models.Model):
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_name_unit',
+                violation_error_message='Ингредиент уже добавлен.',
+            )
+        ]
         ordering = ('name', 'id')
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
@@ -66,7 +73,10 @@ class Recipe(models.Model):
     image = models.ImageField(upload_to='recipes', verbose_name='Изображение')
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(constants.MIN_COOKING_TIME)],
+        validators=[
+            MinValueValidator(constants.MIN_COOKING_TIME),
+            MaxValueValidator(constants.MAX_COOKING_TIME),
+        ],
         verbose_name='Время приготовления, мин',
     )
     short_link = models.CharField(
@@ -82,23 +92,25 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
-    def in_favorites_count(self):
-        return len(self.in_favorites.all())
-
-    in_favorites_count.short_description = 'Добавлений в избранное'
-
-    def save(self, **kwargs):
-        if self.short_link:
-            return super().save(**kwargs)
-        while True:
-            self.short_link = '/SL' + ''.join(
+    def get_short_link(self):
+        return (
+            ''.join(
                 [
                     chr(choice(constants.VALID_SYMBOLS))
                     for _ in range(constants.SHORT_LINK_SIGNIFICANT_LENGTH)
                 ]
-            ) + '/'
-            if not Recipe.objects.filter(short_link=self.short_link).exists():
-                return super().save(**kwargs)
+            )
+        )
+
+    def save(self, **kwargs):
+        if not self.short_link:
+            while True:
+                self.short_link = self.get_short_link()
+                if not (
+                    Recipe.objects.filter(short_link=self.short_link).exists()
+                ):
+                    break
+        return super().save(**kwargs)
 
     def __str__(self):
         return (
@@ -133,35 +145,40 @@ class RecipeIngredient(models.Model):
                 violation_error_message='Ингредиент уже в рецепте.',
             )
         ]
-        ordering = ('id',)
+        ordering = ('-recipe', 'ingredient__name')
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
 
 
-class Favorite(models.Model):
+class FavoritesShoppingCart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='favorites',
+        related_name='%(class)s',
         verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='in_favorites',
+        related_name='in_%(class)s',
         verbose_name='Рецепт',
     )
 
     class Meta:
+        abstract = True
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='unique_addition_in_favorites',
-                violation_error_message=(
-                    'Рецепт уже в избранном у пользователя.'),
+                name='unique_addition_in_%(class)s',
+                violation_error_message='Рецепт уже добавлен.',
             )
         ]
-        ordering = ('-id',)
+        ordering = ('user__username', '-recipe')
+
+
+class Favorites(FavoritesShoppingCart):
+
+    class Meta(FavoritesShoppingCart.Meta):
         verbose_name = 'Рецепт в избранном'
         verbose_name_plural = 'Рецепты в избранном'
 
@@ -173,30 +190,9 @@ class Favorite(models.Model):
         )
 
 
-class ShoppingCart(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='shopping_cart',
-        verbose_name='Пользователь',
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='in_shopping_cart',
-        verbose_name='Рецепт',
-    )
+class ShoppingCart(FavoritesShoppingCart):
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_addition_in_shopping_cart',
-                violation_error_message=(
-                    'Рецепт уже в списке покупок пользователя.'),
-            )
-        ]
-        ordering = ('-id',)
+    class Meta(FavoritesShoppingCart.Meta):
         verbose_name = 'Рецепт в списке покупок'
         verbose_name_plural = 'Рецепты в списке покупок'
 
