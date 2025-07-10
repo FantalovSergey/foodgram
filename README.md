@@ -17,7 +17,7 @@ Cоздайте файл .env со следующими переменными:
 - DB_HOST - хост базы данных POSTGRE
 - DB_PORT - порт базы данных POSTGRE
 
-Установка на локальном компьютере:
+## Установка на локальном компьютере:
 - Разместите файл .env в директории /backend/
 - Находясь в корневой директории проекта командами в терминале запустите docker compose
 
@@ -43,7 +43,8 @@ docker compose exec backend python manage.py collectstatic --no-input
 docker compose exec backend python manage.py import_ingredients
 ```
 
-Установка на удалённом сервере:
+
+## Установка на удалённом сервере:
 - Откройте файл конфигурации веб-сервера, выполнив команду
 
 ```
