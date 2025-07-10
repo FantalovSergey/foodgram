@@ -1,7 +1,6 @@
 import io
 from typing import Any, Dict, Iterable
 
-from django.db.utils import IntegrityError
 from django.db.models import QuerySet
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -16,9 +15,8 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 
 from . import constants
-from .serializers import RecipeMinifiedSerializer, SubscriptionSerializer
-from food.models import Favorite, ShoppingCart
-from users.models import Subscription
+from .serializers import RecipeMinifiedSerializer
+from food.models import Favorites, ShoppingCart
 
 
 def start_page(file: Canvas) -> tuple[PDFTextObject, list]:
@@ -68,36 +66,20 @@ def get_pdf_in_response(data: Dict[Any, Iterable]) -> FileResponse:
 def create_delete_object(
         model_class: type, request: Request, queryset: QuerySet, pk: int,
 ) -> Response:
-    queryset_object = get_object_or_404(queryset, pk=pk)
-    if model_class is Favorite:
-        field = {'recipe': queryset_object}
+    if model_class is Favorites:
         manager = request.user.favorites
-        serializer_class = RecipeMinifiedSerializer
     elif model_class is ShoppingCart:
-        field = {'recipe': queryset_object}
-        manager = request.user.shopping_cart
-        serializer_class = RecipeMinifiedSerializer
-    elif model_class is Subscription:
-        field = {'author': queryset_object}
-        manager = request.user.subscriptions
-        serializer_class = SubscriptionSerializer
+        manager = request.user.shoppingcart
     else:
         raise ValueError('Недопустимый model_class.')
+    recipe = get_object_or_404(queryset, pk=pk)
     if request.method == 'DELETE':
-        try:
-            manager.get(**field).delete()
-        except model_class.DoesNotExist:
-            raise ValidationError('Does not exist.')
+        was_deleted, _ = manager.filter(recipe=recipe).delete()
+        if not was_deleted:
+            raise ValidationError('Рецепт не был добавлен.')
         return Response(status=status.HTTP_204_NO_CONTENT)
-    try:
-        manager.create(**field)
-    except IntegrityError as error:
-        error = str(error)
-        if 'UNIQUE' in error:
-            raise ValidationError('Already exist.')
-        if 'author_is_not_follower' in error:
-            raise ValidationError('You can not subscribe to yourself.')
-        raise ValidationError()
-    serializer = serializer_class(
-        queryset_object, context={'request': request})
+    _, was_created = manager.get_or_create(recipe=recipe)
+    if not was_created:
+        raise ValidationError('Рецепт уже добавлен.')
+    serializer = RecipeMinifiedSerializer(recipe, context={'request': request})
     return Response(serializer.data, status.HTTP_201_CREATED)

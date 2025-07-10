@@ -10,6 +10,3 @@ def validate_username(value):
         message = (
             f'Недопустимые символы в имени пользователя: {invalid_symbols}')
         raise ValidationError({field: message})
-    if re.fullmatch(r'^me$', value):
-        message = 'Запрещено использовать me в качестве имени пользователя.'
-        raise ValidationError({field: message})

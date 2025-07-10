@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 
 from . import models
 
@@ -15,6 +16,7 @@ class RecipeTagInline(admin.TabularInline):
     extra = 0
 
 
+@admin.register(models.Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     inlines = (RecipeIngredientInline, RecipeTagInline)
     exclude = ('tags',)
@@ -22,11 +24,22 @@ class RecipeAdmin(admin.ModelAdmin):
     list_filter = ('tags',)
     readonly_fields = ('in_favorites_count', 'short_link')
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            in_favorites_count=Count('in_favorites')
+        ).order_by(
+            '-id'
+        )
 
+    def in_favorites_count(self, obj):
+        return obj.in_favorites_count
+
+    in_favorites_count.short_description = 'Добавлений в избранное'
+
+
+@admin.register(models.Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-admin.site.register((models.Favorite, models.ShoppingCart, models.Tag))
-admin.site.register(models.Ingredient, IngredientAdmin)
-admin.site.register(models.Recipe, RecipeAdmin)
+admin.site.register((models.Favorites, models.ShoppingCart, models.Tag))

@@ -31,4 +31,6 @@ class Command(BaseCommand):
                 ingredient for ingredient in ingredients
                 if ingredient.name not in ingredients_in_db
             ]
-            Ingredient.objects.bulk_create(ingredients_to_insert)
+            Ingredient.objects.bulk_create(
+                ingredients_to_insert, ignore_conflicts=True,
+            )
