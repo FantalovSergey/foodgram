@@ -22,13 +22,13 @@ class RecipeAdmin(admin.ModelAdmin):
     exclude = ('tags',)
     search_fields = ('author__username', 'name')
     list_filter = ('tags',)
-    readonly_fields = ('in_favorites_count', 'short_link')
+    readonly_fields = ('created_at', 'in_favorites_count', 'short_link')
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(
             in_favorites_count=Count('in_favorites')
         ).order_by(
-            '-id'
+            '-created_at'
         )
 
     def in_favorites_count(self, obj):
