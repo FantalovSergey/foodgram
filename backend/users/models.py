@@ -24,7 +24,6 @@ class User(AbstractUser):
     last_name = models.CharField(
         max_length=constants.CHAR_FIELD_MAX_LENGTH, verbose_name='Фамилия',
     )
-    password = models.CharField(verbose_name='Пароль')
     avatar = models.ImageField(
         upload_to='avatars', null=True, blank=True, verbose_name='Аватар',
     )

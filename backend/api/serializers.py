@@ -66,8 +66,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(
         many=True, source='ingredients_for',
     )
-    is_favorited = serializers.BooleanField()
-    is_in_shopping_cart = serializers.BooleanField()
+    is_favorited = serializers.BooleanField(default=False)
+    is_in_shopping_cart = serializers.BooleanField(default=False)
     image = Base64ImageField()
 
     class Meta:
@@ -144,8 +144,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         validated_data['author'] = self.context['request'].user
         recipe = Recipe.objects.create(**validated_data)
-        recipe.is_favorited = False
-        recipe.is_in_shopping_cart = False
         return self.add_tags_and_ingredients(recipe, tags, ingredients)
 
     @transaction.atomic

@@ -16,7 +16,6 @@ from rest_framework.request import Request
 
 from . import constants
 from .serializers import RecipeMinifiedSerializer
-from food.models import Favorites, ShoppingCart
 
 
 def start_page(file: Canvas) -> tuple[PDFTextObject, list]:
@@ -66,19 +65,17 @@ def get_pdf_in_response(data: Dict[Any, Iterable]) -> FileResponse:
 def create_delete_object(
         model_class: type, request: Request, queryset: QuerySet, pk: int,
 ) -> Response:
-    if model_class is Favorites:
-        manager = request.user.favorites
-    elif model_class is ShoppingCart:
-        manager = request.user.shoppingcart
-    else:
-        raise ValueError('Недопустимый model_class.')
     recipe = get_object_or_404(queryset, pk=pk)
     if request.method == 'DELETE':
-        was_deleted, _ = manager.filter(recipe=recipe).delete()
+        was_deleted, _ = model_class.objects.filter(
+            recipe=recipe, user=request.user,
+        ).delete()
         if not was_deleted:
             raise ValidationError('Рецепт не был добавлен.')
         return Response(status=status.HTTP_204_NO_CONTENT)
-    _, was_created = manager.get_or_create(recipe=recipe)
+    _, was_created = model_class.objects.get_or_create(
+        recipe=recipe, user=request.user,
+    )
     if not was_created:
         raise ValidationError('Рецепт уже добавлен.')
     serializer = RecipeMinifiedSerializer(recipe, context={'request': request})
