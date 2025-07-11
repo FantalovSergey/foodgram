@@ -5,7 +5,7 @@ from djoser.views import UserViewSet
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
@@ -18,17 +18,6 @@ from food import models
 
 class FoodgramUserViewSet(UserViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
-    def permission_denied(self, request, **kwargs):
-        if (
-            self.action in (
-                'activation', 'resend_activation', 'reset_password',
-                'reset_password_confirm', 'set_username',
-                'reset_username', 'reset_username_confirm',
-            )
-        ):
-            raise NotFound()
-        super().permission_denied(request, **kwargs)
 
     @action(
         methods=['get'],
@@ -123,17 +112,14 @@ class RecipeViewSet(ModelViewSet):
         user = self.request.user
         if user.is_anonymous:
             return models.Recipe.objects.annotate(
-                is_favorited=Value(False)
-            ).annotate(
-                is_in_shopping_cart=Value(False)
-            )
+                is_favorited=Value(False), is_in_shopping_cart=Value(False),
+            ).order_by('-created_at')
         in_favorites = user.favorites.filter(recipe=OuterRef('pk'))
         in_shopping_cart = user.shoppingcart.filter(recipe=OuterRef('pk'))
         return models.Recipe.objects.annotate(
-            is_favorited=Exists(in_favorites)
-        ).annotate(
-            is_in_shopping_cart=Exists(in_shopping_cart)
-        )
+            is_favorited=Exists(in_favorites),
+            is_in_shopping_cart=Exists(in_shopping_cart),
+        ).order_by('-created_at')
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):

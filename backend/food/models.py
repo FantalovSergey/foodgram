@@ -27,7 +27,7 @@ class Ingredient(models.Model):
                 violation_error_message='Ингредиент уже добавлен.',
             )
         ]
-        ordering = ('name', 'id')
+        ordering = ('name', 'measurement_unit')
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
@@ -85,9 +85,12 @@ class Recipe(models.Model):
         max_length=constants.SHORT_LINK_MAX_LENGTH,
         verbose_name='Короткая ссылка',
     )
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name='Добавлен',
+    )
 
     class Meta:
-        ordering = ('-id',)
+        ordering = ('-created_at',)
         default_related_name = 'recipes'
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
